@@ -1,10 +1,7 @@
 package models
 
-import "gorm.io/gorm"
-
 type Exercise struct {
-	gorm.Model
-	Name        string `gorm:"uniqueIndex"`
-	Kind        string
-	MuscleGroup string
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	UserID int    `json:"user_id"`
 }

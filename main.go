@@ -1,35 +1,38 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/Csejersen/fitnessTracker/handlers"
-	"github.com/Csejersen/fitnessTracker/models"
 	"github.com/Csejersen/fitnessTracker/server"
 	"github.com/Csejersen/fitnessTracker/storage"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func main() {
-	dbFile := "fitness_tracker.db"
-
-	// Open a connection to the SQLite database
-	db, err := gorm.Open(sqlite.Open(dbFile), &gorm.Config{})
+	db, err := sql.Open("sqlite3", "file:fitness_tracker.db?cache=shared&mode=rwc")
 	if err != nil {
-		log.Fatalf("Failed to connect to the database: %v", err)
+		log.Fatalf("could not open database: %v", err)
+	}
+	defer db.Close()
+
+	err = storage.CreateSchema(db)
+	if err != nil {
+		log.Fatalf("could not create schema: %v", err)
 	}
 
-	err = db.AutoMigrate(&models.Exercise{})
-	if err != nil {
-		log.Fatalf("Failed to migrate database: %v", err)
-	}
-
-	exerciseStore := storage.NewGormExerciseStore(db)
-
+	exerciseStore := storage.NewSqliteExerciseStore(db)
 	exerciseHandler := &handlers.ExerciseHandler{
 		Store: exerciseStore,
 	}
-	server := server.NewAPIServer(":3000", exerciseHandler)
+
+	userStore := storage.NewSqliteUserStore(db)
+	userHandler := &handlers.UserHandler{
+		Store: userStore,
+	}
+
+	server := server.NewAPIServer(":3000", exerciseHandler, userHandler)
 	server.Run()
 }
