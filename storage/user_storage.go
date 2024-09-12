@@ -13,6 +13,7 @@ type UserStore interface {
 	GetAllUsers() ([]models.User, error)
 	GetUserByID(int) (*models.User, error)
 	DeleteUserByID(int) error
+	GetUserByUsername(string) (*models.User, error)
 }
 
 type SqliteUserStore struct {
@@ -34,16 +35,27 @@ func (s *SqliteUserStore) CreateUser(user *models.User) error {
 	return nil
 }
 
+func (s *SqliteUserStore) GetUserByUsername(username string) (*models.User, error) {
+	query := `SELECT ID, username, password FROM Users WHERE username=?`
+	var user models.User
+	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Password)
+	if err != nil {
+		return nil, fmt.Errorf("Failed getting user %s: %v", username, err)
+	}
+
+	return &user, nil
+}
+
 func (s *SqliteUserStore) GetUserByID(id int) (*models.User, error) {
 	query := `SELECT ID, username from Users WHERE ID=?`
-	var user models.User
+	var user *models.User
 
 	err := s.DB.QueryRow(query, id).Scan(&user.ID, &user.Username)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to scan row: %v", err)
 	}
 
-	return &user, nil
+	return user, nil
 }
 
 func (s *SqliteUserStore) GetAllUsers() ([]models.User, error) {

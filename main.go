@@ -6,12 +6,19 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"github.com/Csejersen/fitnessTracker/config"
 	"github.com/Csejersen/fitnessTracker/handlers"
 	"github.com/Csejersen/fitnessTracker/server"
 	"github.com/Csejersen/fitnessTracker/storage"
 )
 
 func main() {
+
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	db, err := sql.Open("sqlite3", "file:fitness_tracker.db?cache=shared&mode=rwc")
 	if err != nil {
 		log.Fatalf("could not open database: %v", err)
@@ -33,6 +40,11 @@ func main() {
 		Store: userStore,
 	}
 
-	server := server.NewAPIServer(":3000", exerciseHandler, userHandler)
+	loginHandler := &handlers.LoginHandler{
+		Store: userStore,
+		Cfg:   *cfg,
+	}
+
+	server := server.NewAPIServer(cfg.Port, exerciseHandler, userHandler, loginHandler)
 	server.Run()
 }

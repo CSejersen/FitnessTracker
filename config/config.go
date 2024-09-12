@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	JWTSecret string
+	Port      string
 }
 
 func LoadConfig() (*Config, error) {
@@ -17,6 +18,7 @@ func LoadConfig() (*Config, error) {
 
 	config := &Config{
 		JWTSecret: getEnv("JWT_SECRET", ""),
+		Port:      getEnv("PORT", ":8080"),
 	}
 
 	return config, nil
