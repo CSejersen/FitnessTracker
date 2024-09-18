@@ -12,7 +12,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:8080/login', {
+      const response = await fetch('api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ const LoginPage = () => {
       const token = data.token;
       localStorage.setItem('jwtToken', token);
       console.log('Login successful');
-      navigate('/');
+      navigate('/exercises');
     } catch (error) {
       setError(error.message);
     }

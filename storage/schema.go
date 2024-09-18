@@ -11,12 +11,12 @@ func CreateSchema(db *sql.DB) error {
 		CREATE TABLE IF NOT EXISTS Users (
 				ID INTEGER PRIMARY KEY AUTOINCREMENT,
 				username TEXT NOT NULL UNIQUE,
-				password TEXT NOT NULL
+				encryptedPassword TEXT NOT NULL
 		);
 
     CREATE TABLE IF NOT EXISTS Exercises (
         ID INTEGER PRIMARY KEY AUTOINCREMENT, 
-        name TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
 				userID INTEGER NOT NULL,
 				FOREIGN KEY (userID) REFERENCES Users(ID)
     );

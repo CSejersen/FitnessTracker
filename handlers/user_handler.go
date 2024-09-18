@@ -29,7 +29,7 @@ func (h *UserHandler) HandleUser(w http.ResponseWriter, r *http.Request) error {
 		return h.handleDeleteUser(w, r)
 
 	default:
-		return fmt.Errorf("Method not allowed: %h", method)
+		return fmt.Errorf("Method not allowed: %s", method)
 	}
 }
 
@@ -52,12 +52,15 @@ func (h *UserHandler) HandleGetUserByID(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *UserHandler) handleGetUser(w http.ResponseWriter, r *http.Request) error {
-	users, err := h.Store.GetAllUsers()
+	userID, err := utils.GetUserID(r)
 	if err != nil {
 		return err
 	}
-	log.Printf("Retrieved all users from db")
-	return utils.WriteJSON(w, http.StatusOK, users)
+	user, err := h.Store.GetUserByID(*userID)
+	if err != nil {
+		return err
+	}
+	return utils.WriteJSON(w, http.StatusOK, user)
 }
 
 type createUserRequest struct {
@@ -76,8 +79,8 @@ func (h *UserHandler) handleCreateUser(w http.ResponseWriter, r *http.Request) e
 	}
 
 	user := &models.User{
-		Username: req.Username,
-		Password: req.Password,
+		Username:          req.Username,
+		EncryptedPassword: req.Password,
 	}
 
 	if err := h.Store.CreateUser(user); err != nil {

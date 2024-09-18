@@ -3,14 +3,12 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/Csejersen/fitnessTracker/models"
 	"github.com/Csejersen/fitnessTracker/storage"
 	"github.com/Csejersen/fitnessTracker/utils"
-	"github.com/gorilla/mux"
 )
 
 type ExerciseHandler struct {
@@ -20,52 +18,39 @@ type ExerciseHandler struct {
 func (h *ExerciseHandler) HandleExercise(w http.ResponseWriter, r *http.Request) error {
 	switch method := r.Method; method {
 	case "GET":
-		return h.handleGetExercise(w, r)
+		return h.HandleGetExercisesByUserID(w, r)
 
 	case "POST":
-		return h.handleCreateExercise(w, r)
+		return h.HandleCreateExercise(w, r)
 
 	case "DELETE":
 		return h.handleDeleteExercise(w, r)
 
 	default:
-		return fmt.Errorf("Method not allowed: %h", method)
+		return fmt.Errorf("Method not allowed: %s", method)
 	}
 }
 
-func (h *ExerciseHandler) HandleGetExerciseByID(w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	IDstr, ok := vars["id"]
-	if !ok {
-		return fmt.Errorf("ID not found in request")
-	}
-	id, err := strconv.Atoi(IDstr)
-	if err != nil {
-		return fmt.Errorf("Invalid ID in request")
-	}
-	exercise, err := h.Store.GetExerciseByID(id)
+func (h *ExerciseHandler) HandleGetExercisesByUserID(w http.ResponseWriter, r *http.Request) error {
+	userID, err := utils.GetUserID(r)
 	if err != nil {
 		return err
 	}
-	log.Printf("Retrived exercise %s from db", exercise.Name)
-	return utils.WriteJSON(w, http.StatusOK, exercise)
-}
 
-func (h *ExerciseHandler) handleGetExercise(w http.ResponseWriter, r *http.Request) error {
-	exercises, err := h.Store.GetAllExercises()
+	exercises, err := h.Store.GetExercisesByUserID(*userID)
 	if err != nil {
 		return err
 	}
-	log.Printf("Retrieved all exercises from db")
+
 	return utils.WriteJSON(w, http.StatusOK, exercises)
 }
 
-type createExerciseRequest struct {
+type CreateExerciseRequest struct {
 	Name string `json:"name"`
 }
 
-func (h *ExerciseHandler) handleCreateExercise(w http.ResponseWriter, r *http.Request) error {
-	var req createExerciseRequest
+func (h *ExerciseHandler) HandleCreateExercise(w http.ResponseWriter, r *http.Request) error {
+	var req CreateExerciseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return fmt.Errorf("Failed to decode request body: %v", err)
 	}
@@ -74,25 +59,31 @@ func (h *ExerciseHandler) handleCreateExercise(w http.ResponseWriter, r *http.Re
 		return fmt.Errorf("exercise_name cannot be empty")
 	}
 
-	exercise := &models.Exercise{
-		Name: req.Name,
+	userID, err := utils.GetUserID(r)
+	if err != nil {
+		return err
 	}
+
+	exercise := &models.Exercise{
+		Name:   req.Name,
+		UserID: *userID,
+	}
+
 	if err := h.Store.CreateExercise(exercise); err != nil {
 		return err
 	}
 
-	log.Printf("Created exercise %s", exercise.Name)
 	resp := "Created Exercise: " + exercise.Name
 	utils.WriteJSON(w, http.StatusOK, resp)
 	return nil
 }
 
-type deleteExerciseRequest struct {
+type DeleteExerciseRequest struct {
 	ID string `json:"id"`
 }
 
 func (h *ExerciseHandler) handleDeleteExercise(w http.ResponseWriter, r *http.Request) error {
-	var req deleteExerciseRequest
+	var req DeleteExerciseRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return fmt.Errorf("Failed to decode request body: %v", err)
 	}
@@ -110,6 +101,5 @@ func (h *ExerciseHandler) handleDeleteExercise(w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-	log.Printf("Deleted exercise with id %s", req.ID)
 	return utils.WriteJSON(w, http.StatusOK, "Deleted exercise")
 }

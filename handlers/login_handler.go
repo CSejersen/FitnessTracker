@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Csejersen/fitnessTracker/auth"
 	"github.com/Csejersen/fitnessTracker/config"
@@ -28,17 +29,25 @@ func (h *LoginHandler) HandleLogin(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("Error decoding request body %v", err)
 	}
 	user, err := h.Store.GetUserByUsername(req.Username)
-	if err != nil || !utils.CheckPasswordSimple(req.Password, user.Password) {
+	if err != nil || !utils.CheckPassword(req.Password, user.EncryptedPassword) {
 		return fmt.Errorf("Invalid username or password")
 	}
 	log.Printf("username: %s", user.Username)
 
-	token, err := auth.GenerateJWT(user.ID, user.Username, &h.Cfg)
+	tokenString, err := auth.GenerateJWT(user.ID, user.Username, &h.Cfg)
 	if err != nil {
 		return fmt.Errorf("Failed to generate token %v", err)
 	}
 
-	response := map[string]string{"token": token}
-	utils.WriteJSON(w, http.StatusOK, response)
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Expires:  time.Now().Add(24 * time.Hour),
+		HttpOnly: true,
+		Secure:   false, // Ensure this is true in production (use HTTPS)
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	utils.WriteJSON(w, http.StatusOK, "log in succesful")
 	return nil
 }

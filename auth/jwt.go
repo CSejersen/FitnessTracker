@@ -25,7 +25,7 @@ func GenerateJWT(userID int, userName string, cfg *config.Config) (string, error
 	return t.SignedString(key)
 }
 
-func ValidateJWT(tokenString string, cfg config.Config) (*jwt.Token, error) {
+func ValidateJWT(tokenString string, cfg *config.Config) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(cfg.JWTSecret), nil
 	})
@@ -39,9 +39,7 @@ func ValidateJWT(tokenString string, cfg config.Config) (*jwt.Token, error) {
 		if exp < time.Now().Unix() {
 			return nil, fmt.Errorf("token has expired")
 		}
-
 		return token, nil
 	}
-
 	return nil, fmt.Errorf("invalid token")
 }

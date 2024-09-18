@@ -27,8 +27,8 @@ func NewSqliteUserStore(db *sql.DB) *SqliteUserStore {
 }
 
 func (s *SqliteUserStore) CreateUser(user *models.User) error {
-	query := "INSERT INTO Users (username, password) VALUES (?, ?)"
-	_, err := s.DB.Exec(query, user.Username, user.Password)
+	query := "INSERT INTO Users (username, encryptedPassword) VALUES (?, ?)"
+	_, err := s.DB.Exec(query, user.Username, user.EncryptedPassword)
 	if err != nil {
 		return fmt.Errorf("Failed to insert user: %w", err)
 	}
@@ -36,9 +36,9 @@ func (s *SqliteUserStore) CreateUser(user *models.User) error {
 }
 
 func (s *SqliteUserStore) GetUserByUsername(username string) (*models.User, error) {
-	query := `SELECT ID, username, password FROM Users WHERE username=?`
+	query := `SELECT ID, username, encryptedPassword FROM Users WHERE username=?`
 	var user models.User
-	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Password)
+	err := s.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.EncryptedPassword)
 	if err != nil {
 		return nil, fmt.Errorf("Failed getting user %s: %v", username, err)
 	}
@@ -59,7 +59,7 @@ func (s *SqliteUserStore) GetUserByID(id int) (*models.User, error) {
 }
 
 func (s *SqliteUserStore) GetAllUsers() ([]models.User, error) {
-	query := `SELECT ID, username from Users`
+	query := `SELECT ID, username, encryptedPassword from Users`
 	rows, err := s.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get users: %w", err)
@@ -69,7 +69,7 @@ func (s *SqliteUserStore) GetAllUsers() ([]models.User, error) {
 	var users []models.User
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.EncryptedPassword); err != nil {
 			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
@@ -86,7 +86,7 @@ func (s *SqliteUserStore) DeleteUserByID(id int) error {
 	query := "DELETE FROM Users WHERE id=?"
 	_, err := s.DB.Exec(query, id)
 	if err != nil {
-		return fmt.Errorf("Failed to delete user with id %s: %v", id, err)
+		return fmt.Errorf("Failed to delete user: %v", err)
 	}
 	return nil
 }
