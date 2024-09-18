@@ -36,10 +36,13 @@ const Exercises = () => {
     <div className="p-4 space-y-4">
       {exercises.map((exercise) => (
         <div key={exercise.id} className="bg-white shadow-md rounded-lg p-4">
-          <h2 className="text-xl font-bold">{exercise.name}</h2>
-          <p>{exercise.description}</p>
+          <h2 className="text-l font-bold">{exercise.name}</h2>
+          <p>{exercise.ID}</p>
         </div>
       ))}
+      <div key={"new_exercise"} className="bg-white shadow-md rounded-lg p-4">
+        <h2 className="text-l font-bold">Add a new exercise</h2>
+      </div>
     </div>
   );
 };

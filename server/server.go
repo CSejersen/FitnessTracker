@@ -13,14 +13,21 @@ import (
 type APIServer struct {
 	listenAddr      string
 	exerciseHandler *handlers.ExerciseHandler
+	workoutHandler  *handlers.WorkoutHandler
 	userHandler     *handlers.UserHandler
 	loginHandler    *handlers.LoginHandler
 }
 
-func NewAPIServer(listenAddr string, exerciseHandler *handlers.ExerciseHandler, userHandler *handlers.UserHandler, loginHandler *handlers.LoginHandler) *APIServer {
+func NewAPIServer(
+	listenAddr string,
+	exerciseHandler *handlers.ExerciseHandler,
+	userHandler *handlers.UserHandler,
+	loginHandler *handlers.LoginHandler,
+	workoutHandler *handlers.WorkoutHandler) *APIServer {
 	return &APIServer{
 		listenAddr:      listenAddr,
 		exerciseHandler: exerciseHandler,
+		workoutHandler:  workoutHandler,
 		userHandler:     userHandler,
 		loginHandler:    loginHandler,
 	}
@@ -29,6 +36,7 @@ func NewAPIServer(listenAddr string, exerciseHandler *handlers.ExerciseHandler, 
 func (s *APIServer) NewRouter() *mux.Router {
 	router := mux.NewRouter()
 	// Register routes
+	router.HandleFunc("/workout", WrapHandler(s.workoutHandler.HandleWorkout))
 	router.HandleFunc("/exercise", WrapHandler(s.exerciseHandler.HandleExercise))
 	router.HandleFunc("/user", WrapHandler(s.userHandler.HandleUser))
 	router.HandleFunc("/user/{id:[0-9]+}", WrapHandler(s.userHandler.HandleGetUserByID)).Methods("GET")
