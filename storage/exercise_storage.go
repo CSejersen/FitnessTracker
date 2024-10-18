@@ -26,17 +26,7 @@ func NewSqliteExerciseStore(db *sql.DB) *SqliteExerciseStore {
 }
 
 func (s *SqliteExerciseStore) CreateExercise(exercise *models.Exercise) error {
-	// Check if the user exists
-	query := "SELECT EXISTS(SELECT 1 FROM Users WHERE ID=?)"
-	var exists bool
-	if err := s.DB.QueryRow(query, exercise.UserID).Scan(&exists); err != nil {
-		return fmt.Errorf("Failed to check if user exists: %w", err)
-	}
-	if !exists {
-		return fmt.Errorf("User not found")
-	}
-
-	query = "INSERT INTO Exercises (name, userID) VALUES (?, ?)"
+	query := "INSERT INTO Exercises (name, userID) VALUES (?, ?)"
 	_, err := s.DB.Exec(query, exercise.Name, exercise.UserID)
 	if err != nil {
 		return fmt.Errorf("Failed to insert exercise: %w", err)

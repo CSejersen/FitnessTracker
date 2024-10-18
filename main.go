@@ -2,11 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/Csejersen/fitnessTracker/config"
+	database "github.com/Csejersen/fitnessTracker/db"
 	"github.com/Csejersen/fitnessTracker/handlers"
 	"github.com/Csejersen/fitnessTracker/server"
 	"github.com/Csejersen/fitnessTracker/storage"
@@ -25,7 +27,7 @@ func main() {
 	}
 	defer db.Close()
 
-	err = storage.CreateSchema(db)
+	err = database.CreateSchema(db)
 	if err != nil {
 		log.Fatalf("could not create schema: %v", err)
 	}
@@ -45,6 +47,17 @@ func main() {
 		Cfg:   *cfg,
 	}
 
-	server := server.NewAPIServer(cfg.Port, exerciseHandler, userHandler, loginHandler)
-	server.Run()
+	workoutStore := storage.NewSqliteWorkoutStore(db)
+	workoutHandler := &handlers.WorkoutHandler{
+		Store: workoutStore,
+	}
+
+	programStore := storage.NewSqliteProgramStore(db)
+	programHandler := &handlers.ProgramHandler{
+		Store: programStore,
+	}
+
+	server := server.NewAPIServer(cfg.Port, exerciseHandler, userHandler, loginHandler, workoutHandler, programHandler)
+	err = server.Run()
+	fmt.Println(err)
 }

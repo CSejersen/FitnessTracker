@@ -13,6 +13,7 @@ type WorkoutStore interface {
 	GetAllWorkoutsByUserID(int) ([]models.Workout, error)
 	GetWorkoutByID(int) (*models.Workout, error)
 	DeleteWorkoutByID(int) error
+	AddExercise(exerciseID int, workoutID int) error
 }
 
 type SqliteWorkoutStore struct {
@@ -30,8 +31,8 @@ func (s *SqliteWorkoutStore) CreateWorkout(workout *models.Workout) error {
 		return err
 	}
 
-	query := "INSERT INTO Workouts (name, userID, exercises) VALUES (?, ?, ?)"
-	_, err := s.DB.Exec(query, workout.Name, workout.UserID, workout.Exercises)
+	query := "INSERT INTO Workouts (name, userID) VALUES (?, ?)"
+	_, err := s.DB.Exec(query, workout.Name, workout.UserID)
 	if err != nil {
 		return fmt.Errorf("Failed to insert workout: %w", err)
 	}
@@ -80,6 +81,15 @@ func (s *SqliteWorkoutStore) DeleteWorkoutByID(id int) error {
 	_, err := s.DB.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("Failed to delete workout %v", err)
+	}
+	return nil
+}
+
+func (s *SqliteWorkoutStore) AddExercise(exerciseID int, workoutID int) error {
+	query := "INSERT INTO WorkoutExercises (exerciseID, workoutID) VALUES (?, ?)"
+	_, err := s.DB.Exec(query, exerciseID, workoutID)
+	if err != nil {
+		return fmt.Errorf("Failed to add exercise %v", err)
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-package storage
+package db
 
 import (
 	"database/sql"
@@ -27,13 +27,30 @@ func CreateSchema(db *sql.DB) error {
 				userID INTEGER NOT NULL,
 				FOREIGN KEY (userID) REFERENCES Users(ID)
 		);
+
+		CREATE TABLE IF NOT EXISTS Programs (
+				ID INTEGER PRIMARY KEY AUTOINCREMENT,
+				name TEXT NOT NULL,
+				userID INTEGER NOT NULL,
+        split TEXT NOT NULL,
+        perWeek INTEGER NOT NULL,
+				FOREIGN KEY (userID) REFERENCES Users(ID)
+		);
 		
-		CREATE TABLE IF NOT EXISTS ExercisesWorkouts(
+		CREATE TABLE IF NOT EXISTS WorkoutExercises(
 				exerciseID INTEGER NOT NULL,
 				workoutID INTEGER NOT NULL,
 				FOREIGN KEY (exerciseID) REFERENCES Exercises(ID),
 				FOREIGN KEY (workoutID) REFERENCES Workouts(ID),
 				PRIMARY KEY (exerciseID, workoutID)
+		);
+
+		CREATE TABLE IF NOT EXISTS ProgramWorkouts(
+				programID INTEGER NOT NULL,
+				workoutID INTEGER NOT NULL,
+				FOREIGN KEY (programID) REFERENCES Programs(ID),
+				FOREIGN KEY (workoutID) REFERENCES Workouts(ID),
+				PRIMARY KEY (programID, workoutID)
 		);
     `
 	_, err := db.Exec(schema)

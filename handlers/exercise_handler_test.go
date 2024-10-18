@@ -44,12 +44,11 @@ func TestHandleCreateExercise(t *testing.T) {
 		Store: mockStore,
 	}
 
-	server := server.NewAPIServer(":8080", handler, nil, nil)
+	server := server.NewAPIServer(":8080", handler, nil, nil, nil)
 	router := server.NewRouter()
 
 	reqBody := handlers.CreateExerciseRequest{
-		Name:   "Pull-up",
-		UserID: 1,
+		Name: "Pull-up",
 	}
 	body, _ := json.Marshal(reqBody)
 
@@ -78,7 +77,7 @@ func TestHandleGetExercisesByUserID(t *testing.T) {
 	handler := &handlers.ExerciseHandler{
 		Store: mockStore,
 	}
-	server := server.NewAPIServer(":8080", handler, nil, nil)
+	server := server.NewAPIServer(":8080", handler, nil, nil, nil)
 	router := server.NewRouter()
 
 	// Mock the store's response to GetExercisesByUserID
@@ -110,7 +109,7 @@ func TestHandleGetExercise(t *testing.T) {
 	handler := &handlers.ExerciseHandler{
 		Store: mockStore,
 	}
-	server := server.NewAPIServer(":8080", handler, nil, nil)
+	server := server.NewAPIServer(":8080", handler, nil, nil, nil)
 	router := server.NewRouter()
 
 	exercises := []models.Exercise{
@@ -141,7 +140,7 @@ func TestHandleDeleteExercise(t *testing.T) {
 	handler := &handlers.ExerciseHandler{
 		Store: mockStore,
 	}
-	server := server.NewAPIServer(":8080", handler, nil, nil)
+	server := server.NewAPIServer(":8080", handler, nil, nil, nil)
 	router := server.NewRouter()
 
 	mockStore.On("DeleteExerciseByID", 1).Return(nil)

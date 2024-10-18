@@ -12,31 +12,28 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type WorkoutHandler struct {
-	Store storage.WorkoutStore
+type ProgramHandler struct {
+	Store storage.ProgramStore
 }
 
-func (h *WorkoutHandler) HandleWorkout(w http.ResponseWriter, r *http.Request) error {
+func (h *ProgramHandler) HandleProgram(w http.ResponseWriter, r *http.Request) error {
 	switch method := r.Method; method {
 	case "GET":
-		return h.HandleGetWorkouts(w, r)
-
+		return h.HandleGetPrograms(w, r)
 	case "POST":
-		return h.HandleCreateWorkout(w, r)
-
-	case "DELETE":
-		return h.HandleDeleteWorkout(w, r)
-
+		return h.HandleCreateProgram(w, r)
+	case "DELTE":
+		return h.HandleDeleteProgram(w, r)
 	default:
 		return fmt.Errorf("Method not allowed: %s", method)
 	}
 }
 
-type AddExerciseRequest struct {
+type AddWorkoutRequest struct {
 	ID int
 }
 
-func (h *WorkoutHandler) AddExercise(w http.ResponseWriter, r *http.Request) error {
+func (h *ProgramHandler) AddWorkout(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	IDstr, ok := vars["id"]
 	if !ok {
@@ -47,70 +44,72 @@ func (h *WorkoutHandler) AddExercise(w http.ResponseWriter, r *http.Request) err
 		return fmt.Errorf("ID not valid, must be a number")
 	}
 
-	var req AddExerciseRequest
-
+	var req AddWorkoutRequest
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		return fmt.Errorf("Failed to decode request body")
 	}
 
-	if err := h.Store.AddExercise(req.ID, id); err != nil {
+	if err := h.Store.AddWorkout(req.ID, id); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (h *WorkoutHandler) HandleGetWorkouts(w http.ResponseWriter, r *http.Request) error {
+func (h *ProgramHandler) HandleGetPrograms(w http.ResponseWriter, r *http.Request) error {
 	userID, err := utils.GetUserID(r)
 	if err != nil {
 		return err
 	}
 
-	workouts, err := h.Store.GetAllWorkoutsByUserID(*userID)
+	programs, err := h.Store.GetProgramByUserID(*userID)
 	if err != nil {
 		return err
 	}
 
-	return utils.WriteJSON(w, http.StatusOK, workouts)
+	return utils.WriteJSON(w, http.StatusOK, programs)
 }
 
-type CreateWorkoutRequest struct {
-	Name string
+type CreateProgramRequest struct {
+	Name    string
+	Split   string
+	PerWeek int
 }
 
-func (h *WorkoutHandler) HandleCreateWorkout(w http.ResponseWriter, r *http.Request) error {
+func (h *ProgramHandler) HandleCreateProgram(w http.ResponseWriter, r *http.Request) error {
 	userID, err := utils.GetUserID(r)
 	if err != nil {
 		return err
 	}
 
-	var req CreateWorkoutRequest
+	var req CreateProgramRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return fmt.Errorf("Failed to decode request body: %v", err)
 	}
 
-	workout := &models.Workout{
-		Name:      req.Name,
-		UserID:    *userID,
-		Exercises: []models.Exercise{},
+	program := &models.Program{
+		UserID:  *userID,
+		Name:    req.Name,
+		Split:   req.Split,
+		PerWeek: req.PerWeek,
 	}
 
-	if err := h.Store.CreateWorkout(workout); err != nil {
+	if err := h.Store.CreateProgram(program); err != nil {
 		return err
 	}
 	return nil
 }
 
-type DeleteWorkoutRequest struct {
+type DeleteProgramRequest struct {
 	ID int
 }
 
-func (h *WorkoutHandler) HandleDeleteWorkout(w http.ResponseWriter, r *http.Request) error {
-	var req DeleteWorkoutRequest
+func (h *ProgramHandler) HandleDeleteProgram(w http.ResponseWriter, r *http.Request) error {
+	var req DeleteProgramRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return fmt.Errorf("Failed to decode request body: %v", err)
 	}
-
-	if err := h.Store.DeleteWorkoutByID(req.ID); err != nil {
+	if err := h.Store.DeleteProgram(req.ID); err != nil {
 		return err
 	}
 	return nil
