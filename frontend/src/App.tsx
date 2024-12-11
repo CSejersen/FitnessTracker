@@ -1,11 +1,11 @@
 import './App.css'
-import { LoginForm } from "@/components/login-form.tsx"
-import { Button } from "@/components/ui/button"
+import Page from "@/app/login/page"
+// import {Button} from "@/components/ui/button"
 
 function App() {
   return (
     <div>
-      <Button > test </Button>
+      <Page />
     </div>
   )
 }
